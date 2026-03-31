@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tol Mol Ke Bol - Grocery Price Comparison</title>
+    <meta name="description" content="Compare grocery prices across Amazon, Flipkart, and JioMart to find the best deals.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Cuelinks affiliate monetization script. 
+         Replace the widget ID or script source with your actual publisher script. -->
+    <script type="text/javascript">
+        var vglnk = {key: 'YOUR_CUELINKS_PUBLISHER_KEY'};
+        (function(d, t) {
+            var s = d.createElement(t);
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = '//cdn.viglink.com/api/vglnk.js';
+            var r = d.getElementsByTagName(t)[0];
+            r.parentNode.insertBefore(s, r);
+        }(document, 'script'));
+    </script>
+</head>
+<body>
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Tol Mol Ke Bol</h1>
+            <p>Smart Grocery Shopping. Compare & Save.</p>
+            <form id="search-form" class="search-box">
+                <input type="text" id="search-input" placeholder="Search for groceries (e.g. 'Rice 1kg')" required>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>Scanning Amazon, Flipkart, & JioMart...</p>
+        </div>
+
+        <div id="results-header" class="hidden">
+            <h2 id="results-title">Results for "<span></span>"</h2>
+        </div>
+
+        <div id="products-grid" class="products-grid">
+            <!-- Product cards will be injected here via JavaScript -->
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Tol Mol Ke Bol. All rights reserved.</p>
+        <p class="disclaimer">We may earn a commission if you purchase through our links.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
