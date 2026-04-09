@@ -1,26 +1,46 @@
 import os
-import requests
 import re
+import requests
 from typing import List
-from fastapi import FastAPI, Query
+
+from fastapi import FastAPI, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+
+from auth import router as auth_router, get_current_user
 
 load_dotenv()
 
 app = FastAPI(title="Tol Mol Ke Bol - Grocery Price Comparison API")
 
-# Allow requests from frontend
+# ── CORS ────────────────────────────────────────────────
+# In production, FRONTEND_URL should be set to the Vercel domain.
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+origins = [
+    FRONTEND_URL,
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ── Register auth routes ────────────────────────────────
+app.include_router(auth_router)
+
+# ── Config ──────────────────────────────────────────────
 SERPAPI_KEY = os.getenv("SERPAPI_API_KEY", "")
+
+TARGET_STORES = ["amazon", "flipkart", "jiomart"]
+
 
 class Product(BaseModel):
     title: str
@@ -29,76 +49,101 @@ class Product(BaseModel):
     image: str
     link: str
 
-TARGET_STORES = ["amazon", "flipkart", "jiomart"]
 
+# ── Mock data fallback ──────────────────────────────────
 def fetch_mock_data(query: str) -> List[dict]:
     return [
         {
-            "title": f"[Amazon] {query} - 1kg Premium Pack",
+            "title": f"{query} - 1kg Premium Pack",
             "price": 120.50,
             "store": "Amazon.in",
             "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop",
-            "link": "https://www.amazon.in/s?k=" + query
+            "link": "https://www.amazon.in/s?k=" + query,
         },
         {
-            "title": f"[Flipkart] {query} Fresh Organic",
+            "title": f"{query} Fresh Organic",
             "price": 115.00,
             "store": "Flipkart",
             "image": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=300&h=300&fit=crop",
-            "link": "https://www.flipkart.com/search?q=" + query
+            "link": "https://www.flipkart.com/search?q=" + query,
         },
         {
-            "title": f"[JioMart] {query} Saver Pack",
+            "title": f"{query} Saver Pack",
             "price": 105.00,
             "store": "JioMart",
             "image": "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=300&h=300&fit=crop",
-            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query
-        }
+            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
+        },
+        {
+            "title": f"{query} - Economy 500g",
+            "price": 89.00,
+            "store": "JioMart",
+            "image": "https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=300&h=300&fit=crop",
+            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
+        },
+        {
+            "title": f"{query} Gold Premium 2kg",
+            "price": 245.00,
+            "store": "Amazon.in",
+            "image": "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=300&h=300&fit=crop",
+            "link": "https://www.amazon.in/s?k=" + query,
+        },
+        {
+            "title": f"{query} Organic Special",
+            "price": 175.00,
+            "store": "Flipkart",
+            "image": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=300&h=300&fit=crop",
+            "link": "https://www.flipkart.com/search?q=" + query,
+        },
     ]
+
+
+# ── Routes ──────────────────────────────────────────────
+@app.get("/")
+def health_check():
+    return {"status": "ok", "service": "Tol Mol Ke Bol API"}
+
 
 @app.get("/search", response_model=List[Product])
 def search_groceries(q: str = Query(..., description="Query for groceries")):
     if not SERPAPI_KEY:
-        # Fallback to mock data if no key provided
         results = fetch_mock_data(q)
     else:
         params = {
             "engine": "google_shopping",
             "q": q,
             "api_key": SERPAPI_KEY,
-            "gl": "in",  # India
-            "hl": "en"
+            "gl": "in",
+            "hl": "en",
         }
         res = requests.get("https://serpapi.com/search", params=params)
-        
+
         if res.status_code != 200:
             return []
-            
+
         data = res.json()
         shopping_results = data.get("shopping_results", [])
-        
+
         results = []
         for item in shopping_results:
             source = item.get("source", "").lower()
-            
-            # Filter only target stores
             if any(store in source for store in TARGET_STORES):
-                # Extract numeric price
                 price_str = item.get("price", "0")
-                price_clean = re.sub(r'[^\d.]', '', price_str)
+                price_clean = re.sub(r"[^\d.]", "", price_str)
                 try:
                     price_val = float(price_clean) if price_clean else 0.0
                 except ValueError:
                     price_val = 0.0
-                
-                results.append({
-                    "title": item.get("title", ""),
-                    "price": price_val,
-                    "store": item.get("source", ""),
-                    "image": item.get("thumbnail", ""),
-                    "link": item.get("link", "")
-                })
-    
-    # Sort by price ascending
+
+                results.append(
+                    {
+                        "title": item.get("title", ""),
+                        "price": price_val,
+                        "store": item.get("source", ""),
+                        "image": item.get("thumbnail", ""),
+                        "link": item.get("link", ""),
+                    }
+                )
+
     results = sorted(results, key=lambda x: x["price"])
     return results

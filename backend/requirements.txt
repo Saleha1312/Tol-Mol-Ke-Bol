@@ -1,4 +1,10 @@
 fastapi
 uvicorn[standard]
+gunicorn
 requests
 python-dotenv
+motor
+pymongo[srv]
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
