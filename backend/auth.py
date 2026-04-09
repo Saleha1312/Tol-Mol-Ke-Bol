@@ -80,38 +80,48 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # ── Routes ──────────────────────────────────────────────
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def signup(req: SignupRequest):
-    # Check if user already exists
-    existing = await users_collection.find_one({"email": req.email})
-    if existing:
-        raise HTTPException(status_code=409, detail="Email already registered")
+    try:
+        # Check if user already exists
+        existing = await users_collection.find_one({"email": req.email})
+        if existing:
+            raise HTTPException(status_code=409, detail="Email already registered")
 
-    # Create user
-    user_doc = {
-        "name": req.name,
-        "email": req.email,
-        "password": hash_password(req.password),
-        "created_at": datetime.utcnow(),
-    }
-    result = await users_collection.insert_one(user_doc)
+        # Create user
+        user_doc = {
+            "name": req.name,
+            "email": req.email,
+            "password": hash_password(req.password),
+            "created_at": datetime.utcnow(),
+        }
+        result = await users_collection.insert_one(user_doc)
 
-    token = create_access_token({"sub": req.email})
-    return TokenResponse(
-        access_token=token,
-        user={"id": str(result.inserted_id), "name": req.name, "email": req.email},
-    )
+        token = create_access_token({"sub": req.email})
+        return TokenResponse(
+            access_token=token,
+            user={"id": str(result.inserted_id), "name": req.name, "email": req.email},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database connection error: {str(e)}")
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(req: LoginRequest):
-    user = await users_collection.find_one({"email": req.email})
-    if not user or not verify_password(req.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+    try:
+        user = await users_collection.find_one({"email": req.email})
+        if not user or not verify_password(req.password, user["password"]):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    token = create_access_token({"sub": user["email"]})
-    return TokenResponse(
-        access_token=token,
-        user={"id": str(user["_id"]), "name": user["name"], "email": user["email"]},
-    )
+        token = create_access_token({"sub": user["email"]})
+        return TokenResponse(
+            access_token=token,
+            user={"id": str(user["_id"]), "name": user["name"], "email": user["email"]},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database connection error: {str(e)}")
 
 
 @router.get("/me")

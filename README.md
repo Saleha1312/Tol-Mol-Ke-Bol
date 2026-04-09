@@ -96,7 +96,7 @@ Start the dev server:
 npm run dev
 ```
 
-Frontend runs at `http://localhost:5500`.
+Frontend runs at `http://localhost:5173`.
 
 ---
 
@@ -144,8 +144,8 @@ Frontend runs at `http://localhost:5500`.
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | `/` | ❌ | Health check |
-| GET | `/search?q=rice` | ❌ | Search & compare prices |
-| POST | `/api/auth/signup` | ❌ | Create account |
-| POST | `/api/auth/login` | ❌ | Log in, get JWT |
-| GET | `/api/auth/me` | ✅ | Get current user profile |
+| GET | `/` | No | Health check |
+| GET | `/search?q=rice` | No | Search & compare prices |
+| POST | `/api/auth/signup` | No | Create account |
+| POST | `/api/auth/login` | No | Log in, get JWT |
+| GET | `/api/auth/me` | Yes | Get current user profile |
