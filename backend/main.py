@@ -46,6 +46,21 @@ SERPAPI_KEY = os.getenv("SERPAPI_API_KEY", "")
 
 TARGET_STORES = ["amazon", "flipkart", "jiomart"]
 
+# ── Affiliate Links ─────────────────────────────────────
+AFFILIATE_LINKS = {
+    "amazon": "https://amzn.urlvia.com/sUmji8",
+    "jiomart": "https://inr.deals/ydznav",
+}
+
+
+def get_affiliate_link(store: str, original_link: str) -> str:
+    """Replace product link with affiliate link if available for the store."""
+    store_lower = store.lower()
+    for key, affiliate_url in AFFILIATE_LINKS.items():
+        if key in store_lower:
+            return affiliate_url
+    return original_link
+
 
 class Product(BaseModel):
     title: str
@@ -63,7 +78,7 @@ def fetch_mock_data(query: str) -> List[dict]:
             "price": 120.50,
             "store": "Amazon.in",
             "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop",
-            "link": "https://www.amazon.in/s?k=" + query,
+            "link": AFFILIATE_LINKS["amazon"],
         },
         {
             "title": f"{query} Fresh Organic",
@@ -77,21 +92,21 @@ def fetch_mock_data(query: str) -> List[dict]:
             "price": 105.00,
             "store": "JioMart",
             "image": "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=300&h=300&fit=crop",
-            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
+            "link": AFFILIATE_LINKS["jiomart"],
         },
         {
             "title": f"{query} - Economy 500g",
             "price": 89.00,
             "store": "JioMart",
             "image": "https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=300&h=300&fit=crop",
-            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
+            "link": AFFILIATE_LINKS["jiomart"],
         },
         {
             "title": f"{query} Gold Premium 2kg",
             "price": 245.00,
             "store": "Amazon.in",
             "image": "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=300&h=300&fit=crop",
-            "link": "https://www.amazon.in/s?k=" + query,
+            "link": AFFILIATE_LINKS["amazon"],
         },
         {
             "title": f"{query} Organic Special",
@@ -140,13 +155,15 @@ def search_groceries(q: str = Query(..., description="Query for groceries")):
                 except ValueError:
                     price_val = 0.0
 
+                store_name = item.get("source", "")
+                original_link = item.get("link", "")
                 results.append(
                     {
                         "title": item.get("title", ""),
                         "price": price_val,
-                        "store": item.get("source", ""),
+                        "store": store_name,
                         "image": item.get("thumbnail", ""),
-                        "link": item.get("link", ""),
+                        "link": get_affiliate_link(store_name, original_link),
                     }
                 )
 
