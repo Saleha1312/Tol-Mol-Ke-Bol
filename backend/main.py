@@ -54,11 +54,7 @@ AFFILIATE_LINKS = {
 
 
 def get_affiliate_link(store: str, original_link: str) -> str:
-    """Replace product link with affiliate link if available for the store."""
-    store_lower = store.lower()
-    for key, affiliate_url in AFFILIATE_LINKS.items():
-        if key in store_lower:
-            return affiliate_url
+    """Return the direct product link. Cuelinks in the frontend will monetize this automatically."""
     return original_link
 
 
@@ -78,7 +74,7 @@ def fetch_mock_data(query: str) -> List[dict]:
             "price": 120.50,
             "store": "Amazon.in",
             "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop",
-            "link": AFFILIATE_LINKS["amazon"],
+            "link": "https://www.amazon.in/s?k=" + query,
         },
         {
             "title": f"{query} Fresh Organic",
@@ -92,21 +88,21 @@ def fetch_mock_data(query: str) -> List[dict]:
             "price": 105.00,
             "store": "JioMart",
             "image": "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=300&h=300&fit=crop",
-            "link": AFFILIATE_LINKS["jiomart"],
+            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
         },
         {
             "title": f"{query} - Economy 500g",
             "price": 89.00,
             "store": "JioMart",
             "image": "https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=300&h=300&fit=crop",
-            "link": AFFILIATE_LINKS["jiomart"],
+            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
         },
         {
             "title": f"{query} Gold Premium 2kg",
             "price": 245.00,
             "store": "Amazon.in",
             "image": "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=300&h=300&fit=crop",
-            "link": AFFILIATE_LINKS["amazon"],
+            "link": "https://www.amazon.in/s?k=" + query,
         },
         {
             "title": f"{query} Organic Special",
