@@ -34,7 +34,7 @@ export default function Home() {
                         Compare. Save. <span className="hero-highlight">Shop Smart.</span>
                     </h1>
                     <p className="hero-subtitle">
-                        Find the lowest grocery prices across Amazon, Flipkart & JioMart — instantly.
+                        Find the lowest grocery prices across Amazon, Flipkart, BigBasket, Blinkit & Instamart — instantly.
                     </p>
                     <form onSubmit={handleSearch} className="search-box" id="search-form">
                         <input
@@ -53,7 +53,9 @@ export default function Home() {
                     <div className="hero-stores">
                         <span className="store-tag">Amazon</span>
                         <span className="store-tag">Flipkart</span>
-                        <span className="store-tag">JioMart</span>
+                        <span className="store-tag">BigBasket</span>
+                        <span className="store-tag">Blinkit</span>
+                        <span className="store-tag">Instamart</span>
                     </div>
                 </div>
             </header>

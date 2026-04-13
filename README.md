@@ -1,6 +1,6 @@
 # 🛒 Tol Mol Ke Bol — Grocery Price Comparison
 
-A full-stack grocery price comparison platform that lets users search and compare prices across **Amazon**, **Flipkart**, and **JioMart** — and earn affiliate commissions while doing it.
+A full-stack grocery price comparison platform that lets users search and compare prices across **Amazon**, **Flipkart**, and others — and earn affiliate commissions while doing it.
 
 ## Tech Stack
 
@@ -42,7 +42,7 @@ A full-stack grocery price comparison platform that lets users search and compar
 
 ## Features
 
--  **Price Comparison** — Search across Amazon, Flipkart, JioMart simultaneously
+-  **Price Comparison** — Search across Amazon, Flipkart, and more simultaneously
 -  **Lowest Price Highlight** — Cheapest product is always visually marked
 -  **JWT Authentication** — Secure signup, login, and protected routes
 -  **Responsive Design** — Works beautifully on mobile, tablet, and desktop

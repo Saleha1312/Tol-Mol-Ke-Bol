@@ -44,18 +44,20 @@ app.include_router(auth_router)
 # ── Config ──────────────────────────────────────────────
 SERPAPI_KEY = os.getenv("SERPAPI_API_KEY", "")
 
-TARGET_STORES = ["amazon", "flipkart", "jiomart"]
+TARGET_STORES = ["amazon", "flipkart", "bigbasket", "blinkit", "instamart", "swiggy"]
 
-# ── Affiliate Links ─────────────────────────────────────
-AFFILIATE_LINKS = {
+# ── Affiliate deep-link helpers ─────────────────────────
+# These base URLs are used ONLY for mock data (when no SerpAPI key is set).
+# For real SerpAPI results, the actual product URL from Google Shopping is used.
+# The Cuelinks script in the frontend auto-converts all outbound store links
+# to affiliate tracking links, so commissions are still earned.
+AFFILIATE_SEARCH_URLS = {
     "amazon": "https://amzn.urlvia.com/sUmji8",
-    "jiomart": "https://inr.deals/ydznav",
+    "flipkart": "https://fktr.in/vrYP4jp",
+    "bigbasket": "https://inr.deals/KQ7GIn",
+    "blinkit": "https://inr.deals/LZkjaN",
+    "instamart": "https://inr.deals/KMi0yI",
 }
-
-
-def get_affiliate_link(store: str, original_link: str) -> str:
-    """Return the direct product link. Cuelinks in the frontend will monetize this automatically."""
-    return original_link
 
 
 class Product(BaseModel):
@@ -68,48 +70,57 @@ class Product(BaseModel):
 
 # ── Mock data fallback ──────────────────────────────────
 def fetch_mock_data(query: str) -> List[dict]:
+    """Return mock products with search URLs that go to query-specific results."""
+    q = requests.utils.requote_uri(query)
     return [
         {
             "title": f"{query} - 1kg Premium Pack",
             "price": 120.50,
             "store": "Amazon.in",
             "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop",
-            "link": "https://www.amazon.in/s?k=" + query,
+            "link": f"https://www.amazon.in/s?k={q}",
         },
         {
             "title": f"{query} Fresh Organic",
             "price": 115.00,
             "store": "Flipkart",
             "image": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=300&h=300&fit=crop",
-            "link": "https://www.flipkart.com/search?q=" + query,
-        },
-        {
-            "title": f"{query} Saver Pack",
-            "price": 105.00,
-            "store": "JioMart",
-            "image": "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=300&h=300&fit=crop",
-            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
+            "link": f"https://www.flipkart.com/search?q={q}",
         },
         {
             "title": f"{query} - Economy 500g",
             "price": 89.00,
-            "store": "JioMart",
+            "store": "BigBasket",
             "image": "https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=300&h=300&fit=crop",
-            "link": "https://www.jiomart.com/catalogsearch/result?q=" + query,
+            "link": f"https://www.bigbasket.com/ps/?q={q}",
         },
         {
             "title": f"{query} Gold Premium 2kg",
             "price": 245.00,
             "store": "Amazon.in",
             "image": "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=300&h=300&fit=crop",
-            "link": "https://www.amazon.in/s?k=" + query,
+            "link": f"https://www.amazon.in/s?k={q}",
         },
         {
             "title": f"{query} Organic Special",
             "price": 175.00,
             "store": "Flipkart",
             "image": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=300&h=300&fit=crop",
-            "link": "https://www.flipkart.com/search?q=" + query,
+            "link": f"https://www.flipkart.com/search?q={q}",
+        },
+        {
+            "title": f"{query} Quick Delivery",
+            "price": 99.00,
+            "store": "Blinkit",
+            "image": "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=300&h=300&fit=crop",
+            "link": f"https://blinkit.com/s/?q={q}",
+        },
+        {
+            "title": f"{query} Express Delivery",
+            "price": 110.00,
+            "store": "Swiggy Instamart",
+            "image": "https://images.unsplash.com/photo-1579113800032-c38bd7635818?w=300&h=300&fit=crop",
+            "link": f"https://www.swiggy.com/instamart/search?q={q}",
         },
     ]
 
@@ -151,15 +162,30 @@ def search_groceries(q: str = Query(..., description="Query for groceries")):
                 except ValueError:
                     price_val = 0.0
 
-                store_name = item.get("source", "")
-                original_link = item.get("link", "")
+                # Always construct a direct store search URL using the product title
+                # so "Buy Now" goes straight to the store with that specific product
+                product_title = requests.utils.requote_uri(item.get("title", q))
+                store_name = item.get("source", "").lower()
+                if "amazon" in store_name:
+                    product_link = f"https://www.amazon.in/s?k={product_title}"
+                elif "flipkart" in store_name:
+                    product_link = f"https://www.flipkart.com/search?q={product_title}"
+                elif "bigbasket" in store_name:
+                    product_link = f"https://www.bigbasket.com/ps/?q={product_title}"
+                elif "blinkit" in store_name:
+                    product_link = f"https://blinkit.com/s/?q={product_title}"
+                elif "instamart" in store_name or "swiggy" in store_name:
+                    product_link = f"https://www.swiggy.com/instamart/search?q={product_title}"
+                else:
+                    product_link = item.get("link", "")
+
                 results.append(
                     {
                         "title": item.get("title", ""),
                         "price": price_val,
-                        "store": store_name,
+                        "store": item.get("source", ""),
                         "image": item.get("thumbnail", ""),
-                        "link": get_affiliate_link(store_name, original_link),
+                        "link": product_link,
                     }
                 )
 
