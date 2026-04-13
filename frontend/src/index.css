@@ -78,7 +78,7 @@ body {
 }
 
 .brand-logo {
-    height: 42px;
+    height: 56px;
     width: auto;
     display: block;
     transition: var(--transition);
