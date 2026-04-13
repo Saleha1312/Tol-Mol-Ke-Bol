@@ -77,11 +77,15 @@ body {
     color: var(--primary);
 }
 
-.navbar-logo {
-    height: 48px;
+.brand-logo {
+    height: 42px;
     width: auto;
     display: block;
-    object-fit: contain;
+    transition: var(--transition);
+}
+
+.navbar-brand:hover .brand-logo {
+    transform: scale(1.05);
 }
 
 .navbar-links {
