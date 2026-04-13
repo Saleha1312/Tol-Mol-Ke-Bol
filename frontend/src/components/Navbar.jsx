@@ -14,8 +14,7 @@ export default function Navbar() {
         <nav className="navbar">
             <div className="navbar-inner">
                 <Link to="/" className="navbar-brand">
-                    <span className="brand-icon">🛒</span>
-                    <span className="brand-text">Tol Mol Ke Bol</span>
+                    <img src="/logo.png" alt="Tol Mol Ke Bol Logo" className="navbar-logo" />
                 </Link>
                 <div className="navbar-links">
                     {user ? (
