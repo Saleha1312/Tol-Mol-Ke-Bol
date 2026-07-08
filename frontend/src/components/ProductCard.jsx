@@ -14,7 +14,12 @@ export default function ProductCard({ product, isLowest }) {
             <div className="product-info">
                 <div className="product-store">{product.store}</div>
                 <div className="product-title">{product.title}</div>
-                <div className="product-price">₹{product.price.toFixed(2)}</div>
+                <div className="product-price-row">
+                    <div className={`product-price ${product.verified ? 'product-price--verified' : ''}`}>
+                        {product.price_display || `₹${product.price.toFixed(2)}`}
+                    </div>
+                    {product.verified && <span className="verified-badge">✓ Exact</span>}
+                </div>
                 <a
                     href={product.link}
                     target="_blank"

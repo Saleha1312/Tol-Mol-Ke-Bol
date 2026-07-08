@@ -12,3 +12,10 @@ db = client[DB_NAME]
 
 # Collections
 users_collection = db["users"]
+search_cache = db["search_cache"]
+
+
+async def init_indexes():
+    await users_collection.create_index("email", unique=True)
+    await search_cache.create_index("query", unique=True)
+    await search_cache.create_index("cached_at", expireAfterSeconds=3600)  # TTL: 1 hour

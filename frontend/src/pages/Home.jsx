@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import API from '../api';
 import ProductCard from '../components/ProductCard';
 
@@ -6,21 +6,61 @@ export default function Home() {
     const [query, setQuery] = useState('');
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [verifying, setVerifying] = useState(false);
     const [searched, setSearched] = useState(false);
+    const abortRef = useRef(null);
+
+    const verifyPrices = async (items) => {
+        if (!items.length) return;
+        setVerifying(true);
+        try {
+            const res = await API.post('/verify-prices', { products: items });
+            if (res.data.length > 0) {
+                setProducts((prev) => {
+                    const updated = [...prev];
+                    for (const v of res.data) {
+                        if (updated[v.index]) {
+                            updated[v.index] = {
+                                ...updated[v.index],
+                                price: v.price,
+                                price_display: v.price_display,
+                                verified: true,
+                            };
+                        }
+                    }
+                    return updated.sort((a, b) => a.price - b.price);
+                });
+            }
+        } catch {
+            // Verification failed — keep SerpAPI prices
+        } finally {
+            setVerifying(false);
+        }
+    };
 
     const handleSearch = async (e) => {
         e.preventDefault();
         if (!query.trim()) return;
+
+        if (abortRef.current) abortRef.current.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
 
         setLoading(true);
         setSearched(true);
         setProducts([]);
 
         try {
-            const res = await API.get('/search', { params: { q: query.trim() } });
+            const res = await API.get('/search', {
+                params: { q: query.trim() },
+                signal: controller.signal,
+            });
             setProducts(res.data);
+            verifyPrices(res.data);
         } catch (err) {
-            console.error('Search failed:', err);
+            if (err.name !== 'CanceledError') {
+                console.error('Search failed:', err);
+            }
         } finally {
             setLoading(false);
         }
@@ -78,13 +118,21 @@ export default function Home() {
 
                 {!loading && products.length > 0 && (
                     <>
-                        <h2 className="results-title">
-                            Results for "<span className="highlight">{query}</span>"
-                        </h2>
+                        <div className="results-header">
+                            <h2 className="results-title">
+                                Results for "<span className="highlight">{query}</span>"
+                            </h2>
+                            {verifying && (
+                                <div className="verifying-badge">
+                                    <div className="spinner spinner--small"></div>
+                                    Fetching exact prices from stores...
+                                </div>
+                            )}
+                        </div>
                         <div className="products-grid">
                             {products.map((product, index) => (
                                 <ProductCard
-                                    key={index}
+                                    key={`${product.store}-${product.title}-${index}`}
                                     product={product}
                                     isLowest={index === 0}
                                 />
